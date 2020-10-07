@@ -1,0 +1,49 @@
+version: '3.0'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    environment:
+      - discovery.type=single-node
+      # for low memory systems - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+  db:
+    image: mariadb:10.4
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./image-files/db/phpmyadmin_init.sql:/docker-entrypoint-initdb.d/00-pma_init.sql:ro
+      - ./image-files/db/magento2_init.sql:/docker-entrypoint-initdb.d/01-magento2_init.sql:ro
+    restart: always
+    env_file:
+      - .env
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "${PMA_PORT}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - ./image-files/phpmyadmin/phpmyadmin_config.php:/etc/phpmyadmin/config.user.inc.php:ro
+    depends_on:
+      - db
+  web:
+    image: oitmain/magento2:php7.4
+    ports:
+      - "${MAGENTO_HTTP_PORT}:80"
+      - "${MAGENTO_HTTPS_PORT}:443"
+    volumes:
+      - ./src:/app/web
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ./php.ini:/usr/local/etc/php/conf.d/zz-custom.php.ini
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - elasticsearch
+volumes:
+  elasticsearch-data:
+    driver: local
+  mysql-data:
+    driver: local
