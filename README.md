@@ -1,3 +1,5 @@
+Inspired and copied most of the code from https://hub.docker.com/r/alexcheng/magento2/ and https://github.com/yiisoft/yii2-docker
+
 ## Quick start
 
 Get your repo.magento.com authentication keys handy. https://devdocs.magento.com/guides/v2.4/install-gde/prereq/connect-auth.html
